@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="theme-color" content="#0F3B2E">
+    <title>โรงแรม แม่ยม พาเลส | Mae Yom Palace Hotel</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div class="hero-bg">
+        <div class="hero-content">
+            <div class="hero-emblem">
+                <div class="emblem-circle">
+                    <span class="emblem-letter">M</span>
+                </div>
+                <div class="emblem-rays"></div>
+            </div>
+            
+            <div class="hero-text">
+                <p class="hero-eyebrow">ยินดีต้อนรับสู่</p>
+                <h1 class="hero-title">โรงแรม แม่ยม พาเลส</h1>
+                <p class="hero-subtitle">Mae Yom Palace Hotel</p>
+                
+                <div class="divider-luxury">
+                    <span class="divider-luxury-icon">❀</span>
+                </div>
+                
+                <p class="hero-description">
+                    ระบบสั่งอาหารโรงครัว/โรงอาหาร<br>
+                    สแกน QR Code ที่โต๊ะของคุณเพื่อเริ่มต้น
+                </p>
+            </div>
+            
+            <div class="hero-actions">
+                <a href="#" id="btn-customer" class="btn btn-primary btn-xl">
+                    <span>🍽️</span> เมนูอาหาร
+                </a>
+                <a href="admin.html" class="btn btn-emerald btn-xl">
+                    <span>👨‍💼</span> หน้าแอดมิน
+                </a>
+            </div>
+            
+            <div class="hero-features">
+                <div class="feature-item">
+                    <div class="feature-icon">📱</div>
+                    <p>สแกน QR Code</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🍴</div>
+                    <p>เลือกเมนูง่าย</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <p>เสิร์ฟรวดเร็ว</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .hero-bg {
+            min-height: 100vh;
+            background: 
+                radial-gradient(ellipse at top, rgba(201, 168, 97, 0.15), transparent 60%),
+                radial-gradient(ellipse at bottom, rgba(15, 59, 46, 0.1), transparent 60%),
+                linear-gradient(135deg, #0F3B2E 0%, #082319 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(201, 168, 97, 0.08) 1px, transparent 1px),
+                radial-gradient(circle at 80% 70%, rgba(201, 168, 97, 0.06) 1px, transparent 1px);
+            background-size: 60px 60px, 90px 90px;
+            pointer-events: none;
+        }
+        
+        .hero-content {
+            text-align: center;
+            max-width: 640px;
+            position: relative;
+            z-index: 1;
+            animation: fade-in-up 0.8s ease;
+        }
+        
+        .hero-emblem {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .emblem-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: 
+                radial-gradient(circle at 30% 30%, #E0C892, #C9A861 50%, #A88840);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 0 40px rgba(201, 168, 97, 0.4),
+                inset 0 -8px 16px rgba(0,0,0,0.2),
+                inset 0 4px 8px rgba(255,255,255,0.4);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .emblem-letter {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 56px;
+            font-weight: 700;
+            color: #0F3B2E;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .emblem-rays {
+            position: absolute;
+            inset: 0;
+            border: 2px solid rgba(201, 168, 97, 0.3);
+            border-radius: 50%;
+            animation: emblem-rotate 20s linear infinite;
+        }
+        
+        .emblem-rays::before, .emblem-rays::after {
+            content: '';
+            position: absolute;
+            inset: -10px;
+            border: 1px dashed rgba(201, 168, 97, 0.2);
+            border-radius: 50%;
+        }
+        
+        .emblem-rays::after {
+            inset: -20px;
+            border-style: dotted;
+        }
+        
+        @keyframes emblem-rotate {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hero-eyebrow {
+            font-size: 13px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: #C9A861;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        .hero-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 600;
+            color: #F8F4EC;
+            line-height: 1.1;
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
+        }
+        
+        .hero-subtitle {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 22px;
+            color: #C9A861;
+            margin-bottom: 24px;
+            letter-spacing: 0.05em;
+        }
+        
+        .hero-description {
+            color: rgba(248, 244, 236, 0.85);
+            font-size: 17px;
+            line-height: 1.7;
+            margin-bottom: 40px;
+        }
+        
+        .divider-luxury {
+            margin: 24px auto;
+            max-width: 240px;
+        }
+        
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+        }
+        
+        .hero-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        
+        .feature-item {
+            text-align: center;
+            color: rgba(248, 244, 236, 0.7);
+            font-size: 14px;
+        }
+        
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 12px;
+            background: rgba(201, 168, 97, 0.1);
+            border: 1px solid rgba(201, 168, 97, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        @media (max-width: 480px) {
+            .hero-actions { flex-direction: column; }
+            .hero-actions .btn { width: 100%; }
+        }
+    </style>
+    
+    <script src="js/config.js"></script>
+    <script>
+        // ตรวจสอบว่ามี table param ไหม (มาจากการสแกน QR)
+        const params = new URLSearchParams(window.location.search);
+        const tableNumber = params.get('table');
+        
+        if (tableNumber) {
+            // มาจากการสแกน QR -> redirect ไปหน้าเมนู
+            window.location.href = `menu.html?table=${tableNumber}`;
+        }
+        
+        // ปุ่มเมนูอาหาร -> ให้กรอกเลขโต๊ะ หรือเลือกกลับบ้าน
+        document.getElementById('btn-customer').addEventListener('click', (e) => {
+            e.preventDefault();
+            const choice = confirm('คุณกำลังจะ:\n\n[ตกลง] = สั่งกลับบ้าน (Takeaway)\n[ยกเลิก] = กินที่นี่ (กรุณากรอกเลขโต๊ะ)');
+            if (choice) {
+                window.location.href = 'menu.html?type=takeaway';
+            } else {
+                const t = prompt('กรุณากรอกเลขโต๊ะ:');
+                if (t && !isNaN(t)) {
+                    window.location.href = `menu.html?table=${t}`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

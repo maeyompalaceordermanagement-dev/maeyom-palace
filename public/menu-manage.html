@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการเมนู - แม่ยม พาเลส</title>
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .page-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 80px; }
+  .page-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+  .page-head h1 { font-family:'Cormorant Garamond',serif; color:var(--color-emerald); font-size:32px; margin:0; }
+  .page-head .actions { display:flex; gap:8px; flex-wrap:wrap; }
+
+  /* Categories bar */
+  .cat-bar { display:flex; gap:8px; overflow-x:auto; padding:8px 0 14px; margin-bottom:16px; border-bottom:1px solid var(--color-line); }
+  .cat-chip { padding:8px 14px; border-radius:20px; border:1px solid var(--color-line); background:#fff; color:var(--color-emerald); cursor:pointer; white-space:nowrap; font-size:14px; }
+  .cat-chip.active { background:var(--color-emerald); color:#fff; border-color:var(--color-emerald); }
+  .cat-chip .x { margin-left:6px; opacity:.6; }
+  .cat-chip .x:hover { opacity:1; color:#f88; }
+
+  .menu-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+  .menu-card { background:#fff; border:1px solid var(--color-line); border-radius:14px; overflow:hidden; transition:all .2s; position:relative; }
+  .menu-card:hover { box-shadow:0 8px 24px rgba(15,59,46,.08); }
+  .menu-card .img { width:100%; height:160px; background:#fafaf6 center/cover no-repeat; position:relative; }
+  .menu-card .img.empty { display:flex; align-items:center; justify-content:center; color:var(--color-muted); font-size:48px; }
+  .menu-card .badges { position:absolute; top:8px; left:8px; display:flex; gap:4px; }
+  .menu-card .body { padding:14px; }
+  .menu-card .name { font-weight:600; color:var(--color-emerald); margin-bottom:4px; font-size:16px; }
+  .menu-card .desc { color:var(--color-muted); font-size:12px; margin-bottom:8px; min-height:32px; }
+  .menu-card .price { color:var(--color-gold); font-weight:700; font-size:18px; margin-bottom:10px; }
+  .menu-card .row-btns { display:flex; gap:6px; }
+  .menu-card .row-btns button { flex:1; font-size:12px; padding:6px; }
+  .menu-card.unavailable { opacity:.55; }
+  .menu-card .badge-chip { background:rgba(0,0,0,.55); color:#fff; font-size:10px; padding:2px 8px; border-radius:10px; backdrop-filter:blur(6px); }
+  .menu-card .badge-chip.spicy { background:#dc2626; }
+  .menu-card .badge-chip.rec { background:var(--color-gold); }
+  .menu-card .badge-chip.off { background:#666; }
+  .empty-state { text-align:center; padding:60px 20px; color:var(--color-muted); grid-column:1/-1; }
+  .empty-state .ico { font-size:64px; margin-bottom:12px; }
+
+  .modal-card.lg { max-width:560px; }
+  .img-preview { width:100%; height:200px; border-radius:10px; background:#fafaf6 center/cover no-repeat; border:1px dashed var(--color-line); display:flex; align-items:center; justify-content:center; color:var(--color-muted); margin-bottom:8px; }
+  .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:560px) { .form-grid-2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="admin.html" class="brand-link">
+      <span class="brand-mark">M</span>
+      <span class="brand-name">แม่ยม พาเลส</span>
+    </a>
+    <nav class="topbar-nav">
+      <a href="admin.html">ออเดอร์</a>
+      <a href="tables.html">โต๊ะ</a>
+      <a href="menu-manage.html" class="active">เมนู</a>
+    </nav>
+  </div>
+</header>
+
+<div class="page-wrap">
+
+  <div class="page-head">
+    <h1>🍽️ จัดการเมนูอาหาร</h1>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="openCategoryModal()">+ หมวดหมู่</button>
+      <button class="btn btn-primary" onclick="openMenuModal()">+ เพิ่มเมนู</button>
+    </div>
+  </div>
+
+  <!-- Category filter bar -->
+  <div class="cat-bar" id="catBar"></div>
+
+  <!-- Menu grid -->
+  <div class="menu-grid" id="menuGrid"></div>
+
+</div>
+
+<!-- Modal: เพิ่ม/แก้ไขเมนู -->
+<div id="menuModal" class="modal-bg" style="display:none;">
+  <div class="modal-card lg">
+    <h2 id="menuModalTitle" style="font-family:'Cormorant Garamond',serif;color:var(--color-emerald);margin-top:0;">เพิ่มเมนูใหม่</h2>
+
+    <div class="form-row">
+      <label>รูปภาพ</label>
+      <div class="img-preview" id="imgPreview">📷 ยังไม่มีรูป</div>
+      <input type="file" id="inpImage" accept="image/*" onchange="onImagePick(event)">
+      <small style="color:var(--color-muted);">เลือกรูปจากเครื่อง (อัปโหลดไป Supabase Storage)</small>
+    </div>
+
+    <div class="form-row">
+      <label>ชื่อเมนู *</label>
+      <input type="text" id="inpName" placeholder="เช่น ผัดไทยกุ้งสด">
+    </div>
+
+    <div class="form-row">
+      <label>คำอธิบาย (ไม่บังคับ)</label>
+      <textarea id="inpDesc" rows="2" placeholder="เช่น ผัดไทยสูตรพิเศษ ใส่กุ้งแม่น้ำตัวโต"></textarea>
+    </div>
+
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label>ราคา (บาท) *</label>
+        <input type="number" id="inpPrice" min="0" step="0.01">
+      </div>
+      <div class="form-row">
+        <label>หมวดหมู่ *</label>
+        <select id="inpCategory"></select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="inpAvailable" checked> พร้อมจำหน่าย
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="inpRecommended"> เมนูแนะนำ ⭐
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="inpSpicy"> เมนูเผ็ด 🌶️
+        </label>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeMenuModal()" style="flex:1;">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveMenu()" style="flex:1;" id="btnSave">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: หมวดหมู่ -->
+<div id="categoryModal" class="modal-bg" style="display:none;">
+  <div class="modal-card">
+    <h2 style="font-family:'Cormorant Garamond',serif;color:var(--color-emerald);margin-top:0;">เพิ่มหมวดหมู่ใหม่</h2>
+    <div class="form-row">
+      <label>ชื่อหมวดหมู่ *</label>
+      <input type="text" id="inpCatName" placeholder="เช่น อาหารว่าง, เครื่องดื่ม">
+    </div>
+    <div class="form-row">
+      <label>ไอคอน (อิโมจิ)</label>
+      <input type="text" id="inpCatIcon" placeholder="🍵" maxlength="4">
+    </div>
+    <div class="form-row">
+      <label>ลำดับการแสดง</label>
+      <input type="number" id="inpCatOrder" min="0" value="99">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeCategoryModal()" style="flex:1;">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveCategory()" style="flex:1;">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/menu-manage.js"></script>
+
+</body>
+</html>

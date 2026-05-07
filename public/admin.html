@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0F3B2E">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
+    <title>หน้าแอดมิน | โรงแรม แม่ยม พาเลส</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="maeyom-header">
+        <div class="container-lg">
+            <div class="maeyom-header-inner">
+                <div class="maeyom-logo">
+                    <div class="maeyom-logo-mark">M</div>
+                    <div class="maeyom-logo-text">
+                        <div class="maeyom-logo-name">แม่ยม พาเลส</div>
+                        <div class="maeyom-logo-sub">Admin Dashboard</div>
+                    </div>
+                </div>
+                <nav class="admin-nav">
+                    <a href="admin.html" class="nav-link active">📋 ออเดอร์</a>
+                    <a href="tables.html" class="nav-link">🪑 โต๊ะ</a>
+                    <a href="menu-manage.html" class="nav-link">🍽️ เมนู</a>
+                    <button id="btn-sound-toggle" class="btn btn-secondary btn-sm" title="เปิด/ปิดเสียง">
+                        🔔
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container-lg" style="padding: 24px 20px;">
+        <!-- Summary Cards -->
+        <div class="summary-grid mb-6">
+            <div class="summary-card" style="--accent: #FCD34D;">
+                <div class="summary-icon">⏳</div>
+                <div class="summary-info">
+                    <div class="summary-label">รอ</div>
+                    <div class="summary-value" id="count-pending">0</div>
+                </div>
+            </div>
+            <div class="summary-card" style="--accent: #FB923C;">
+                <div class="summary-icon">👨‍🍳</div>
+                <div class="summary-info">
+                    <div class="summary-label">กำลังทำ</div>
+                    <div class="summary-value" id="count-cooking">0</div>
+                </div>
+            </div>
+            <div class="summary-card" style="--accent: #34D399;">
+                <div class="summary-icon">🍽️</div>
+                <div class="summary-info">
+                    <div class="summary-label">พร้อมเสิร์ฟ</div>
+                    <div class="summary-value" id="count-ready">0</div>
+                </div>
+            </div>
+            <div class="summary-card" style="--accent: #10B981;">
+                <div class="summary-icon">✨</div>
+                <div class="summary-info">
+                    <div class="summary-label">วันนี้รวม</div>
+                    <div class="summary-value" id="count-today">0</div>
+                </div>
+            </div>
+            <div class="summary-card" style="--accent: #C9A861;">
+                <div class="summary-icon">💰</div>
+                <div class="summary-info">
+                    <div class="summary-label">ยอดวันนี้</div>
+                    <div class="summary-value" id="revenue-today">฿0</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filter Tabs -->
+        <div class="filter-bar mb-4">
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="active">🔥 ที่ดำเนินการ</button>
+                <button class="filter-tab" data-filter="pending">⏳ รอ</button>
+                <button class="filter-tab" data-filter="cooking">👨‍🍳 ทำ</button>
+                <button class="filter-tab" data-filter="ready">🍽️ เสร็จ</button>
+                <button class="filter-tab" data-filter="delivering">🚚 ส่ง</button>
+                <button class="filter-tab" data-filter="completed">✨ เสร็จสิ้น</button>
+                <button class="filter-tab" data-filter="all">📋 ทั้งหมด</button>
+            </div>
+            
+            <div class="filter-types">
+                <button class="type-tab active" data-type="all">ทั้งหมด</button>
+                <button class="type-tab" data-type="dine_in">🍽️ กินที่นี่</button>
+                <button class="type-tab" data-type="takeaway">🥡 กลับบ้าน</button>
+            </div>
+        </div>
+        
+        <!-- Auto-print toggle -->
+        <div class="settings-bar mb-4">
+            <label class="toggle-switch">
+                <input type="checkbox" id="auto-print">
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">🖨️ ปริ้นออเดอร์อัตโนมัติเมื่อมีออเดอร์ใหม่</span>
+            </label>
+        </div>
+        
+        <!-- Orders List -->
+        <div id="orders-container">
+            <div style="text-align: center; padding: 60px 20px;">
+                <div class="spinner" style="margin: 0 auto 16px;"></div>
+                <p style="color: var(--color-stone);">กำลังโหลดออเดอร์...</p>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Print Modal (hidden iframe-like) -->
+    <div id="print-frame" style="display:none;"></div>
+    
+    <style>
+        .admin-nav {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            padding: 8px 14px;
+            color: var(--color-cream);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background: rgba(201, 168, 97, 0.15);
+            color: var(--color-gold-light);
+        }
+        
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        
+        .summary-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--accent);
+            transition: all 0.2s;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .summary-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, white), color-mix(in srgb, var(--accent) 10%, white));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        
+        .summary-label {
+            font-size: 13px;
+            color: var(--color-stone);
+            font-weight: 600;
+        }
+        
+        .summary-value {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-emerald-dark);
+            line-height: 1;
+        }
+        
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tabs, .filter-types {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        
+        .filter-tabs::-webkit-scrollbar, .filter-types::-webkit-scrollbar { display: none; }
+        
+        .filter-tab, .type-tab {
+            padding: 10px 18px;
+            border-radius: var(--radius-full);
+            border: 1.5px solid var(--color-cream-dark);
+            background: white;
+            color: var(--color-graphite);
+            font-family: var(--font-body);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .filter-tab.active, .type-tab.active {
+            background: var(--color-emerald);
+            border-color: var(--color-emerald);
+            color: var(--color-gold-light);
+        }
+        
+        /* Settings Bar */
+        .settings-bar {
+            background: white;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .toggle-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .toggle-switch input { display: none; }
+        
+        .toggle-slider {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--color-cream-dark);
+            border-radius: var(--radius-full);
+            transition: all 0.2s;
+        }
+        
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .toggle-switch input:checked + .toggle-slider {
+            background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
+        }
+        
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(20px);
+        }
+        
+        .toggle-label {
+            font-weight: 600;
+            color: var(--color-graphite);
+            font-size: 14px;
+        }
+        
+        /* Order Cards */
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 16px;
+        }
+        
+        .order-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 0;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: all 0.3s;
+            border-top: 4px solid var(--color-gold);
+            position: relative;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .order-card.is-new {
+            animation: order-pulse 1.5s ease infinite;
+        }
+        
+        @keyframes order-pulse {
+            0%, 100% { box-shadow: var(--shadow-md), 0 0 0 0 rgba(201, 168, 97, 0.5); }
+            50% { box-shadow: var(--shadow-md), 0 0 0 12px rgba(201, 168, 97, 0); }
+        }
+        
+        .order-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, var(--color-cream) 0%, white 100%);
+            border-bottom: 1px solid var(--color-cream-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .order-id {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-stone);
+            letter-spacing: 0.05em;
+        }
+        
+        .order-table {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--color-emerald-dark);
+            margin-top: 4px;
+            line-height: 1.2;
+        }
+        
+        .order-time {
+            font-size: 12px;
+            color: var(--color-stone);
+            margin-top: 4px;
+        }
+        
+        .order-body {
+            padding: 16px 20px;
+        }
+        
+        .order-customer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--color-cream-dark);
+        }
+        
+        .customer-detail {
+            font-size: 14px;
+            color: var(--color-graphite);
+        }
+        
+        .customer-detail strong {
+            color: var(--color-emerald-dark);
+        }
+        
+        .order-items-list {
+            margin-bottom: 12px;
+        }
+        
+        .order-item-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 14px;
+        }
+        
+        .order-item-name {
+            flex: 1;
+            color: var(--color-graphite);
+        }
+        
+        .order-item-qty {
+            background: var(--color-cream);
+            color: var(--color-emerald-dark);
+            padding: 2px 10px;
+            border-radius: var(--radius-full);
+            font-weight: 700;
+            font-size: 12px;
+        }
+        
+        .order-item-note {
+            font-size: 12px;
+            color: var(--color-gold-dark);
+            font-style: italic;
+            padding-left: 16px;
+        }
+        
+        .order-notes {
+            background: linear-gradient(135deg, rgba(252, 211, 77, 0.1), rgba(252, 211, 77, 0.05));
+            border-left: 3px solid var(--color-pending);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--color-graphite);
+            margin-bottom: 12px;
+        }
+        
+        .order-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 2px dashed var(--color-gold);
+        }
+        
+        .order-total-label {
+            font-size: 14px;
+            color: var(--color-stone);
+            font-weight: 600;
+        }
+        
+        .order-total-amount {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--color-gold-dark);
+        }
+        
+        .order-actions {
+            padding: 12px 16px;
+            background: var(--color-cream);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .order-actions .btn {
+            flex: 1;
+            min-width: 100px;
+            font-size: 13px;
+            padding: 10px 14px;
+        }
+        
+        .order-type-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+        
+        .order-type-pill.dine_in {
+            background: rgba(16, 185, 129, 0.15);
+            color: #065F46;
+        }
+        
+        .order-type-pill.takeaway {
+            background: rgba(245, 158, 11, 0.15);
+            color: #92400E;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--color-stone);
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-value { font-size: 22px; }
+            .admin-nav { flex-wrap: wrap; }
+            .nav-link { font-size: 12px; padding: 6px 10px; }
+        }
+    </style>
+    
+    <script src="js/config.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

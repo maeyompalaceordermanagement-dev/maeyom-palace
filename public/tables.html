@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการโต๊ะ - แม่ยม พาเลส</title>
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .page-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 80px; }
+  .page-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+  .page-head h1 { font-family:'Cormorant Garamond',serif; color:var(--color-emerald); font-size:32px; margin:0; }
+  .page-head .actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .tables-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; }
+  .table-card { background:#fff; border:1px solid var(--color-line); border-radius:14px; padding:18px; text-align:center; transition:all .2s; position:relative; }
+  .table-card:hover { box-shadow:0 8px 24px rgba(15,59,46,.08); transform:translateY(-2px); }
+  .table-card .num { font-family:'Cormorant Garamond',serif; font-size:48px; font-weight:600; color:var(--color-emerald); line-height:1; margin-bottom:4px; }
+  .table-card .name { color:var(--color-gold); font-weight:600; font-size:14px; margin-bottom:2px; }
+  .table-card .seats { color:var(--color-muted); font-size:12px; margin-bottom:12px; }
+  .table-card .qr-box { background:#fafaf6; border-radius:10px; padding:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; min-height:140px; }
+  .table-card .qr-box canvas, .table-card .qr-box img { display:block; max-width:100%; height:auto; }
+  .table-card .row-btns { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
+  .table-card .row-btns button { font-size:12px; padding:6px 10px; }
+  .table-card .inactive { opacity:.5; }
+  .table-card .badge-off { position:absolute; top:8px; right:8px; background:#fee; color:#c33; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; }
+  .empty-state { text-align:center; padding:60px 20px; color:var(--color-muted); }
+  .empty-state .ico { font-size:64px; margin-bottom:12px; }
+  /* Print all view */
+  .print-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8mm; }
+  .print-card { border:2px dashed #ccc; border-radius:8px; padding:12px; text-align:center; page-break-inside:avoid; }
+  .print-card h3 { font-family:'Cormorant Garamond',serif; color:#0F3B2E; margin:0 0 4px; font-size:20px; }
+  .print-card .pn { font-family:'Cormorant Garamond',serif; font-size:42px; color:#C9A861; font-weight:700; line-height:1; margin:6px 0; }
+  .print-card .scan { font-size:12px; color:#666; margin-top:6px; }
+  .print-card canvas, .print-card img { margin:6px auto; display:block; }
+  @media print {
+    body { background:#fff; }
+    .no-print { display:none !important; }
+    .page-wrap { padding:0; max-width:none; }
+    .print-grid { grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar no-print">
+  <div class="topbar-inner">
+    <a href="admin.html" class="brand-link">
+      <span class="brand-mark">M</span>
+      <span class="brand-name">แม่ยม พาเลส</span>
+    </a>
+    <nav class="topbar-nav">
+      <a href="admin.html">ออเดอร์</a>
+      <a href="tables.html" class="active">โต๊ะ</a>
+      <a href="menu-manage.html">เมนู</a>
+    </nav>
+  </div>
+</header>
+
+<div class="page-wrap">
+
+  <div class="page-head no-print">
+    <h1>🪑 จัดการโต๊ะอาหาร</h1>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="window.print()">🖨️ ปริ้น QR ทุกโต๊ะ</button>
+      <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มโต๊ะ</button>
+    </div>
+  </div>
+
+  <div id="tablesContainer" class="tables-grid"></div>
+
+  <!-- View สำหรับปริ้นทุกโต๊ะ (ซ่อนปกติ แสดงเฉพาะตอนปริ้น) -->
+  <div id="printAllView" style="display:none;"></div>
+
+</div>
+
+<!-- Modal: เพิ่ม/แก้ไขโต๊ะ -->
+<div id="tableModal" class="modal-bg" style="display:none;">
+  <div class="modal-card">
+    <h2 id="modalTitle" style="font-family:'Cormorant Garamond',serif;color:var(--color-emerald);margin-top:0;">เพิ่มโต๊ะใหม่</h2>
+    <div class="form-row">
+      <label>หมายเลขโต๊ะ *</label>
+      <input type="number" id="inpTableNumber" min="1" placeholder="เช่น 1, 2, 11">
+    </div>
+    <div class="form-row">
+      <label>ชื่อโต๊ะ (ไม่บังคับ)</label>
+      <input type="text" id="inpTableName" placeholder="เช่น VIP, ระเบียง, ริมสระ">
+    </div>
+    <div class="form-row">
+      <label>จำนวนที่นั่ง</label>
+      <input type="number" id="inpSeats" min="1" value="4">
+    </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="inpActive" checked> เปิดใช้งานโต๊ะนี้
+      </label>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeModal()" style="flex:1;">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTable()" style="flex:1;">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: ดู QR ใหญ่ -->
+<div id="qrModal" class="modal-bg" style="display:none;">
+  <div class="modal-card" style="text-align:center;max-width:420px;">
+    <h2 id="qrModalTitle" style="font-family:'Cormorant Garamond',serif;color:var(--color-emerald);margin-top:0;"></h2>
+    <p id="qrModalSub" style="color:var(--color-muted);margin:0 0 16px;"></p>
+    <div id="qrModalCanvas" style="display:flex;justify-content:center;padding:16px;background:#fff;border:1px solid var(--color-line);border-radius:12px;margin-bottom:12px;"></div>
+    <p style="font-size:13px;color:var(--color-muted);word-break:break-all;" id="qrModalUrl"></p>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn btn-ghost" onclick="closeQrModal()" style="flex:1;">ปิด</button>
+      <button class="btn btn-primary" onclick="downloadQr()" style="flex:1;">ดาวน์โหลด PNG</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/tables.js"></script>
+
+</body>
+</html>

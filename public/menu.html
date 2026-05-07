@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0F3B2E">
+    <title>เมนูอาหาร | โรงแรม แม่ยม พาเลส</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="maeyom-header">
+        <div class="container">
+            <div class="maeyom-header-inner">
+                <div class="maeyom-logo">
+                    <div class="maeyom-logo-mark">M</div>
+                    <div class="maeyom-logo-text">
+                        <div class="maeyom-logo-name">แม่ยม พาเลส</div>
+                        <div class="maeyom-logo-sub">Mae Yom Palace</div>
+                    </div>
+                </div>
+                <div id="table-info" class="table-info">
+                    <span id="table-display">กำลังโหลด...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container" style="padding: 24px 20px 100px;">
+        <!-- ขั้นตอน 1: เลือกประเภทการสั่ง -->
+        <section id="step-order-type" class="step-section animate-fade-in-up">
+            <div class="step-header">
+                <span class="step-number">1</span>
+                <h2 class="step-title">คุณต้องการสั่งแบบไหน?</h2>
+            </div>
+            
+            <div class="order-type-grid">
+                <button class="order-type-card" data-type="dine_in">
+                    <div class="order-type-icon">🍽️</div>
+                    <div class="order-type-name">กินที่นี่</div>
+                    <div class="order-type-desc">รับประทานที่โต๊ะ</div>
+                </button>
+                <button class="order-type-card" data-type="takeaway">
+                    <div class="order-type-icon">🥡</div>
+                    <div class="order-type-name">กลับบ้าน</div>
+                    <div class="order-type-desc">รับกลับ Takeaway</div>
+                </button>
+            </div>
+        </section>
+        
+        <!-- ขั้นตอน 2: ข้อมูลลูกค้า -->
+        <section id="step-customer-info" class="step-section hidden">
+            <div class="step-header">
+                <span class="step-number">2</span>
+                <h2 class="step-title">ข้อมูลลูกค้า</h2>
+            </div>
+            
+            <div class="card card-luxury">
+                <div class="form-group">
+                    <label class="form-label form-label-required">ชื่อ-นามสกุล</label>
+                    <input type="text" id="customer-name" class="form-input" placeholder="กรุณากรอกชื่อ" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label-required">เบอร์โทรศัพท์</label>
+                    <input type="tel" id="customer-phone" class="form-input" placeholder="08X-XXX-XXXX" autocomplete="tel" inputmode="tel">
+                </div>
+                <button id="btn-confirm-info" class="btn btn-primary btn-block btn-lg">
+                    ดำเนินการต่อ →
+                </button>
+            </div>
+        </section>
+        
+        <!-- ขั้นตอน 3: เลือกเมนู -->
+        <section id="step-menu" class="step-section hidden">
+            <div class="step-header">
+                <span class="step-number">3</span>
+                <h2 class="step-title">เลือกเมนูอาหาร</h2>
+            </div>
+            
+            <!-- Search bar -->
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-menu" class="form-input" placeholder="ค้นหาเมนู..." style="padding-left: 44px;">
+            </div>
+            
+            <!-- Categories Tabs -->
+            <div id="category-tabs" class="category-tabs">
+                <button class="category-tab active" data-category="all">ทั้งหมด</button>
+            </div>
+            
+            <!-- Menu Grid -->
+            <div id="menu-grid" class="menu-grid">
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                    <div class="spinner" style="margin: 0 auto 16px;"></div>
+                    <p style="color: var(--color-stone);">กำลังโหลดเมนู...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Cart Bar (Sticky Bottom) -->
+    <div id="cart-bar" class="cart-bar hidden">
+        <button id="btn-view-cart" class="cart-btn">
+            <span class="cart-count" id="cart-count">0</span>
+            <span class="cart-text">ดูตะกร้า</span>
+            <span class="cart-total" id="cart-total">฿0</span>
+        </button>
+    </div>
+    
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 style="font-family: var(--font-display); font-size: 26px;">🛒 ตะกร้าของคุณ</h3>
+                <button class="btn btn-ghost btn-icon" onclick="closeCart()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="cart-items"></div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label">หมายเหตุ (ถ้ามี)</label>
+                    <textarea id="order-notes" class="form-textarea" placeholder="เช่น ไม่ใส่ผัก, ไม่เผ็ด..." rows="2"></textarea>
+                </div>
+                
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>ยอดรวม</span>
+                        <span id="cart-subtotal">฿0</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>รวมทั้งสิ้น</span>
+                        <span id="cart-final">฿0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCart()">เพิ่มเมนู</button>
+                <button class="btn btn-primary" onclick="submitOrder()" id="btn-submit-order">
+                    🛍️ ยืนยันสั่ง
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Item Detail Modal -->
+    <div id="item-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-body" style="padding: 0;">
+                <div id="item-image-container" class="item-modal-image"></div>
+                <div style="padding: 24px;">
+                    <h3 id="item-modal-name" style="font-family: var(--font-display); font-size: 28px; margin-bottom: 8px;"></h3>
+                    <p id="item-modal-desc" style="color: var(--color-stone); margin-bottom: 16px;"></p>
+                    <div id="item-modal-price" class="item-price-large"></div>
+                    
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="form-label">หมายเหตุพิเศษ</label>
+                        <textarea id="item-notes" class="form-textarea" placeholder="เช่น ไม่ใส่ผัก, เผ็ดน้อย..." rows="2"></textarea>
+                    </div>
+                    
+                    <div class="quantity-selector">
+                        <span>จำนวน:</span>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="changeItemQty(-1)">−</button>
+                            <span id="item-quantity">1</span>
+                            <button class="qty-btn" onclick="changeItemQty(1)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeItemModal()">ยกเลิก</button>
+                <button class="btn btn-primary" onclick="addItemToCart()">
+                    🛒 เพิ่มในตะกร้า
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .table-info {
+            background: rgba(201, 168, 97, 0.15);
+            border: 1px solid rgba(201, 168, 97, 0.4);
+            color: var(--color-gold-light);
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .step-section { margin-bottom: 40px; }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .step-number {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            box-shadow: var(--shadow-gold);
+        }
+        
+        .step-title {
+            font-family: var(--font-display);
+            font-size: 26px;
+            color: var(--color-emerald-dark);
+        }
+        
+        /* Order Type Cards */
+        .order-type-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .order-type-card {
+            background: white;
+            border: 2px solid var(--color-cream-dark);
+            border-radius: var(--radius-lg);
+            padding: 32px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-family: var(--font-body);
+        }
+        
+        .order-type-card:hover {
+            border-color: var(--color-gold);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-gold);
+        }
+        
+        .order-type-card.selected {
+            border-color: var(--color-gold);
+            background: linear-gradient(135deg, white, var(--color-cream));
+            box-shadow: var(--shadow-gold);
+        }
+        
+        .order-type-icon { font-size: 48px; margin-bottom: 12px; }
+        .order-type-name { font-size: 18px; font-weight: 700; color: var(--color-emerald-dark); margin-bottom: 4px; }
+        .order-type-desc { font-size: 13px; color: var(--color-stone); }
+        
+        /* Search */
+        .search-bar { position: relative; margin-bottom: 16px; }
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-stone);
+        }
+        
+        /* Category Tabs */
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            scrollbar-width: none;
+        }
+        .category-tabs::-webkit-scrollbar { display: none; }
+        
+        .category-tab {
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            border: 1.5px solid var(--color-cream-dark);
+            background: white;
+            color: var(--color-graphite);
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .category-tab.active {
+            background: var(--color-emerald);
+            border-color: var(--color-emerald);
+            color: var(--color-gold-light);
+        }
+        
+        /* Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .menu-item {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid transparent;
+        }
+        
+        .menu-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--color-gold-light);
+        }
+        
+        .menu-item-image {
+            width: 100%;
+            aspect-ratio: 16/10;
+            background: linear-gradient(135deg, var(--color-cream), var(--color-cream-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .menu-item-tags {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            display: flex;
+            gap: 6px;
+        }
+        
+        .menu-item-tag {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(8px);
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 11px;
+            font-weight: 700;
+        }
+        
+        .menu-item-tag.recommended { background: var(--color-gold); color: white; }
+        .menu-item-tag.spicy { background: #DC2626; color: white; }
+        
+        .menu-item-content { padding: 16px; }
+        
+        .menu-item-name {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-emerald-dark);
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        
+        .menu-item-desc {
+            font-size: 13px;
+            color: var(--color-stone);
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 36px;
+        }
+        
+        .menu-item-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .menu-item-price {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--color-gold-dark);
+        }
+        
+        .menu-item-add {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
+            color: white;
+            border: none;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: var(--shadow-gold);
+            transition: all 0.2s;
+        }
+        
+        .menu-item-add:hover { transform: scale(1.1); }
+        
+        .menu-item-unavailable {
+            opacity: 0.5;
+            pointer-events: none;
+            position: relative;
+        }
+        
+        .menu-item-unavailable::after {
+            content: 'หมด';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 18px;
+            z-index: 2;
+        }
+        
+        /* Cart Bar */
+        .cart-bar {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            right: 16px;
+            z-index: 90;
+            max-width: 540px;
+            margin: 0 auto;
+            animation: fade-in-up 0.4s ease;
+        }
+        
+        .cart-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--color-emerald) 0%, var(--color-emerald-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: var(--font-body);
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .cart-btn:hover { transform: translateY(-2px); }
+        
+        .cart-count {
+            background: var(--color-gold);
+            color: var(--color-emerald-dark);
+            min-width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .cart-text { flex: 1; text-align: left; color: var(--color-gold-light); }
+        .cart-total { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--color-gold-light); }
+        
+        /* Cart Items */
+        .cart-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--color-cream-dark);
+            align-items: center;
+        }
+        
+        .cart-item:last-child { border-bottom: none; }
+        
+        .cart-item-info { flex: 1; }
+        .cart-item-name { font-weight: 600; color: var(--color-emerald-dark); }
+        .cart-item-price { color: var(--color-gold-dark); font-weight: 600; font-size: 14px; }
+        .cart-item-notes { font-size: 12px; color: var(--color-stone); margin-top: 2px; font-style: italic; }
+        
+        .cart-summary {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--color-cream);
+            border-radius: var(--radius-md);
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            color: var(--color-graphite);
+        }
+        
+        .summary-row.total {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--color-emerald-dark);
+            border-top: 1px dashed var(--color-gold);
+            padding-top: 12px;
+            margin-top: 8px;
+        }
+        
+        /* Item Modal */
+        .item-modal-image {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, var(--color-cream), var(--color-cream-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            overflow: hidden;
+        }
+        
+        .item-modal-image img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .item-price-large {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--color-gold-dark);
+        }
+        
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: var(--color-cream);
+            border-radius: var(--radius-md);
+            margin-top: 16px;
+            font-weight: 600;
+        }
+        
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--color-gold);
+            background: white;
+            color: var(--color-gold-dark);
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .qty-btn:hover { background: var(--color-gold); color: white; }
+        
+        #item-quantity {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 700;
+            min-width: 32px;
+            text-align: center;
+        }
+    </style>
+    
+    <script src="js/config.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/customer.js"></script>
+</body>
+</html>
